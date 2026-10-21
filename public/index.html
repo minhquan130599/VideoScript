@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VideoScript AI Studio - Tạo Kịch Bản Video 15s & Prompts Đổi Background Sản Phẩm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow effects -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- Main Container -->
+  <div class="app-layout">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">
+            <span>VideoScript</span> AI Studio
+            <span class="badge-version">v2.1 Pro</span>
+          </div>
+          <p class="brand-sub">OpenCode Go: GPT-6 Luna (/responses) & Claude Haiku 5.5 (/messages) • Đa Kịch Bản Video</p>
+        </div>
+      </div>
+
+      <div class="header-nav-tabs">
+        <button class="nav-tab active" id="tabBtnGenerator" onclick="switchTab('generator')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          <span>Studio Tạo Prompt</span>
+        </button>
+        <button class="nav-tab" id="tabBtnAnalysis" onclick="switchTab('analysis')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 12h5l3 8 4-16 3 8h5"/>
+          </svg>
+          <span>Phân Tích Video Mẫu (IMG_8804.MP4)</span>
+        </button>
+      </div>
+
+      <div class="header-actions">
+        <div class="api-status-pill" id="apiStatusPill" onclick="openApiModal()">
+          <span class="status-dot active"></span>
+          <span class="status-model" id="activeModelLabel">GPT-6 Luna (/responses)</span>
+          <span class="status-hint">Cấu hình API</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- TAB 1: STUDIO GENERATOR -->
+    <main class="main-content" id="tabGenerator">
+      <div class="studio-grid">
+        
+        <!-- LEFT COLUMN: CONTROLS & INPUTS -->
+        <section class="control-panel">
+          
+          <!-- Box 1: Product Image Upload (Multi-image supported) -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="header-title-wrap">
+                <span class="step-num">1</span>
+                <h3>Ảnh Sản Phẩm Đầu Vào</h3>
+              </div>
+              <span class="card-tag">Tải nhiều góc ảnh / Dán Ctrl+V</span>
+            </div>
+
+            <!-- Upload Area -->
+            <div class="upload-dropzone" id="dropzone" onclick="triggerFileInput()">
+              <input type="file" id="imageInput" accept="image/*" multiple style="display:none" onchange="handleFileSelect(event)">
+              <div class="dropzone-content" id="dropzoneEmpty">
+                <div class="upload-icon-pulse">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div class="upload-primary-text">Kéo thả một hoặc nhiều ảnh sản phẩm vào đây</div>
+                <div class="upload-sub-text">Hỗ trợ chọn nhiều file cùng lúc (mặt trước, mặt sau, góc nghiêng, cận cảnh chất liệu...)</div>
+                <div class="shortcut-pill">Mẹo: Bấm <b>Ctrl + V</b> để dán liên tiếp nhiều ảnh</div>
+              </div>
+
+              <!-- Multi-Image Preview Container -->
+              <div class="dropzone-multi-preview" id="dropzonePreview" style="display: none;" onclick="event.stopPropagation()">
+                <div class="multi-preview-header">
+                  <span class="multi-count" id="multiCountLabel">Đã chọn: 0 ảnh tham chiếu</span>
+                  <div class="multi-actions">
+                    <button type="button" class="btn-preview-action" onclick="triggerFileInput()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      Thêm ảnh
+                    </button>
+                    <button type="button" class="btn-preview-action danger" onclick="clearAllImages()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      Xóa tất cả
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Grid of Image Thumbnails -->
+                <div class="images-thumb-grid" id="imagesThumbGrid">
+                  <!-- Dynamically populated via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick sample buttons -->
+            <div class="quick-samples">
+              <span class="sample-label">Thử nhanh kịch bản sáng tạo theo sản phẩm:</span>
+              <button type="button" class="btn-sample highlight-btn" onclick="loadSampleResultsDemo('noodles')">
+                🍜 Mẫu 1: Mì Ăn Liền (3 Công Thức Nấu Khác Biệt)
+              </button>
+              <button type="button" class="btn-sample demo-btn" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.25), rgba(245, 158, 11, 0.25)); border-color: rgba(245, 158, 11, 0.45); color: #fed7aa;" onclick="loadSampleResultsDemo('sauce')">
+                🍗 Mẫu 2: Sốt Gà Chiên Nước Mắm (3 Món Nấu Thực Tế Với Sốt)
+              </button>
+            </div>
+          </div>
+
+          <!-- Box 2: Background Selector -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="header-title-wrap">
+                <span class="step-num">2</span>
+                <h3>Thay Hoàn Toàn Background</h3>
+              </div>
+              <span class="card-tag">Chỉ định hoặc Tự động</span>
+            </div>
+
+            <p class="field-hint">Hệ thống sẽ giữ nguyên sản phẩm chính và thay thế toàn bộ bối cảnh xung quanh bằng phong cách bạn chọn:</p>
+
+            <div class="bg-selector-grid" id="bgSelectorGrid">
+              <!-- Preset 1: Auto -->
+              <label class="bg-option-card" id="bgCard_auto">
+                <input type="radio" name="bgChoice" value="auto" onchange="handleBgChange(this)">
+                <div class="bg-card-body">
+                  <div class="bg-icon">🤖</div>
+                  <div class="bg-info">
+                    <span class="bg-name">AI Tự Động Phù Hợp (Auto)</span>
+                    <span class="bg-desc">Tự phân tích vibe sản phẩm để tạo background tối ưu nhất</span>
+                  </div>
+                </div>
+              </label>
+
+              <!-- 30 background themes, rendered from /api/backgrounds by app.js -->
+              <div id="bgPoolCards" style="display: contents;"></div>
+
+              <!-- Preset 8: Custom Input -->
+              <label class="bg-option-card" id="bgCard_custom">
+                <input type="radio" name="bgChoice" value="custom" onchange="handleBgChange(this)">
+                <div class="bg-card-body">
+                  <div class="bg-icon">🎨</div>
+                  <div class="bg-info">
+                    <span class="bg-name">Tự Nhập Background Riêng (Custom)</span>
+                    <span class="bg-desc">Tự do mô tả background bất kỳ bạn muốn</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Custom Background Textarea (conditionally shown) -->
+            <div class="custom-bg-wrap" id="customBgWrap" style="display: none;">
+              <label for="customBgText">Mô tả background bạn mong muốn:</label>
+              <textarea id="customBgText" rows="2" placeholder="Ví dụ: Bàn ăn ngoài ban công nhìn ra tháp Eiffel lúc hoàng hôn, ánh nến lung linh và ly rượu vang..."></textarea>
+            </div>
+          </div>
+
+          <!-- Box 3: Generation Parameters -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="header-title-wrap">
+                <span class="step-num">3</span>
+                <h3>Cấu Hình Video & Số Lượng</h3>
+              </div>
+            </div>
+
+            <div class="params-grid">
+              
+              <!-- Number of Video Variations (Requested Feature) -->
+              <div class="param-item full-width highlight-param">
+                <div class="param-top">
+                  <label for="sliderVideos"><b>🎬 Số lượng video tạo ra:</b></label>
+                  <span class="param-val" id="valVideos">3 video khác nhau</span>
+                </div>
+                <input type="range" id="sliderVideos" min="1" max="5" step="1" value="3" oninput="updateVideosLabel(this.value)">
+                <div class="slider-marks">
+                  <span>1 Video</span>
+                  <span>2</span>
+                  <span class="highlight">3 Video (Đề xuất)</span>
+                  <span>4</span>
+                  <span>5 Video (Đa dạng)</span>
+                </div>
+                <span class="input-tip-small">Mỗi video sẽ có 1 góc nhìn, kịch bản và diễn biến hoàn toàn khác biệt!</span>
+              </div>
+
+              <!-- Video Duration -->
+              <div class="param-item">
+                <div class="param-top">
+                  <label for="sliderDuration">Thời lượng mỗi video:</label>
+                  <span class="param-val" id="valDuration">15 giây</span>
+                </div>
+                <input type="range" id="sliderDuration" min="5" max="60" step="1" value="15" oninput="updateDurationLabel(this.value)">
+                <div class="slider-marks">
+                  <span>5s</span>
+                  <span class="highlight">15s (Chuẩn)</span>
+                  <span>30s</span>
+                  <span>60s</span>
+                </div>
+              </div>
+
+              <!-- Scene Count per video -->
+              <div class="param-item">
+                <div class="param-top">
+                  <label for="sliderScenes">Số cảnh trong mỗi video:</label>
+                  <span class="param-val" id="valScenes">5 cảnh</span>
+                </div>
+                <input type="range" id="sliderScenes" min="3" max="8" step="1" value="5" oninput="updateScenesLabel(this.value)">
+                <div class="slider-marks">
+                  <span>3 cảnh</span>
+                  <span class="highlight">5 cảnh (Đề xuất)</span>
+                  <span>8 cảnh</span>
+                </div>
+              </div>
+
+              <!-- Aspect Ratio -->
+              <div class="param-item full-width">
+                <label>Tỷ lệ khung hình:</label>
+                <div class="ratio-chips">
+                  <label class="ratio-chip active">
+                    <input type="radio" name="aspectRatio" value="9:16" checked>
+                    <span>📱 9:16 (Dọc TikTok/Reels)</span>
+                  </label>
+                  <label class="ratio-chip">
+                    <input type="radio" name="aspectRatio" value="16:9">
+                    <span>🖥️ 16:9 (Ngang YouTube/Web)</span>
+                  </label>
+                  <label class="ratio-chip">
+                    <input type="radio" name="aspectRatio" value="1:1">
+                    <span>⏹️ 1:1 (Vuông Instagram)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Packaging Override: clear bag with a different shape -->
+              <div class="param-item full-width">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="chkBagOverride" onchange="document.getElementById('bagShapeWrap').style.display = this.checked ? 'block' : 'none'">
+                  <span>🛍️ Thay bao bì bằng túi trong suốt có hình dáng khác</span>
+                </label>
+                <div id="bagShapeWrap" style="display:none; margin-top:8px;">
+                  <select id="selBagShape" style="width:100%; padding:8px; border-radius:8px; background:rgba(255,255,255,0.05); color:inherit; border:1px solid rgba(255,255,255,0.15);">
+                    <option value="random">🎲 Ngẫu nhiên (khác túi gốc)</option>
+                  </select>
+                </div>
+                <span class="input-tip-small">Giữ nguyên phần ruột sản phẩm (nguyên liệu, màu sắc), chỉ đổi sang túi trong kiểu khác, nhãn sticker đơn giản ghi tên sản phẩm. Dùng cho sản phẩm đựng túi trong như set nấu chè, đồ khô.</span>
+              </div>
+
+              <!-- Prompt Language -->
+              <div class="param-item full-width">
+                <label>Ngôn ngữ prompt tạo ảnh & video:</label>
+                <div class="ratio-chips">
+                  <label class="ratio-chip">
+                    <input type="radio" name="promptLanguage" value="en" checked>
+                    <span>🇬🇧 Tiếng Anh (Ổn định nhất)</span>
+                  </label>
+                  <label class="ratio-chip">
+                    <input type="radio" name="promptLanguage" value="vi">
+                    <span>🇻🇳 Tiếng Việt</span>
+                  </label>
+                </div>
+                <span class="input-tip-small">Tiêu đề & mô tả cảnh luôn là tiếng Việt. Prompt Midjourney luôn giữ tiếng Anh vì Midjourney không hiểu tốt tiếng Việt.</span>
+              </div>
+
+              <!-- Extra notes -->
+              <div class="param-item full-width">
+                <label for="extraNotes">Ghi chú thêm (Tùy chọn):</label>
+                <input type="text" id="extraNotes" placeholder="Ví dụ: Nhấn mạnh sự tươi ngon, phong cách trẻ trung năng động...">
+              </div>
+            </div>
+
+            <!-- Main Submit Button -->
+            <button class="btn-generate" id="btnGenerate" onclick="startGeneration()">
+              <div class="btn-glow"></div>
+              <span class="btn-content">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span>Phân Tích & Sinh Toàn Bộ Kịch Bản Video</span>
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <!-- RIGHT COLUMN: RESULTS & OUTPUTS -->
+        <section class="results-panel">
+          
+          <!-- Empty State -->
+          <div class="results-empty" id="resultsEmpty">
+            <div class="empty-art">
+              <div class="box-icon-3d">📦</div>
+              <div class="sparkle s1">✨</div>
+              <div class="sparkle s2">🎬</div>
+              <div class="sparkle s3">🪄</div>
+            </div>
+            <h2>Chưa có kịch bản nào được tạo</h2>
+            <p>Tải ảnh sản phẩm bất kỳ ở cột bên trái và nhấn <b>"Phân Tích & Sinh Toàn Bộ Kịch Bản Video"</b> để xem kết quả bao gồm:</p>
+            <div class="feature-pills-list">
+              <div class="feat-pill">
+                <span class="feat-icon">📦</span>
+                <span><b>Cảnh 1 mỗi video:</b> Thùng carton đóng kín, tay mở nắp thùng hé lộ sản phẩm (Viral Unboxing Hook)</span>
+              </div>
+              <div class="feat-pill">
+                <span class="feat-icon">🪄</span>
+                <span><b>Các cảnh sau:</b> Sinh ngẫu nhiên dựa vào sản phẩm, thay background 100%</span>
+              </div>
+              <div class="feat-pill">
+                <span class="feat-icon">🎬</span>
+                <span><b>Đa dạng video:</b> Tạo đồng thời 1 - 5 video khác nhau với cốt truyện riêng</span>
+              </div>
+              <div class="feat-pill">
+                <span class="feat-icon">⚡</span>
+                <span><b>OpenCode Go Native:</b> Hỗ trợ chuẩn /responses (GPT-6) & /messages (Haiku 5.5)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div class="results-loading" id="resultsLoading" style="display: none;">
+            <div class="spinner-core">
+              <div class="spinner-ring ring-1"></div>
+              <div class="spinner-ring ring-2"></div>
+              <div class="spinner-center">⚡</div>
+            </div>
+            <h3 id="loadingStatusText">AI đang phân tích sản phẩm qua OpenCode Go...</h3>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <p class="loading-sub">Hệ thống đang trích xuất đặc trưng sản phẩm, thiết kế cảnh tay mở thùng carton và thay thế background...</p>
+          </div>
+
+          <!-- Error State: STRICTLY NO FALLBACK SCRIPTS SHOWN ON ERROR -->
+          <div class="results-error" id="resultsError" style="display: none;">
+            <div class="error-icon-box">❌</div>
+            <h2 class="error-title">Không Thể Tạo Kịch Bản - API Báo Lỗi</h2>
+            <p class="error-msg-main" id="resultsErrorMsg">Đã xảy ra lỗi trong quá trình xử lý với OpenCode Go API.</p>
+            <div class="error-code-block" id="resultsErrorCodeBlock">
+              <!-- Exact error message injected here -->
+            </div>
+            <div class="error-guidance">
+              <div class="guide-item">💡 <b>Cách khắc phục:</b></div>
+              <div class="guide-item">• Kiểm tra lại OpenCode Go API Key (bắt đầu bằng <code>oc_sk_...</code>).</div>
+              <div class="guide-item">• Nếu dùng <b>GPT-6 Luna</b>, chọn giao thức <code>/responses</code>. Nếu dùng <b>Claude Haiku</b>, chọn giao thức <code>/messages</code>.</div>
+              <div class="guide-item">• Tăng <b>Max Output Tokens</b> lên 24K hoặc 32K nếu sinh nhiều video (3-5 video).</div>
+            </div>
+            <div class="error-action-buttons">
+              <button type="button" class="btn-action primary" onclick="startGeneration()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                Thử Lại Ngay
+              </button>
+              <button type="button" class="btn-action" onclick="openApiModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                Cấu Hình Lại API & Token
+              </button>
+            </div>
+          </div>
+
+          <!-- Actual Results Content -->
+          <div class="results-content" id="resultsContent" style="display: none;">
+            
+            <!-- Result Top Bar: Product Analysis Info -->
+            <div class="product-summary-card">
+              <div class="summary-meta">
+                <div class="summary-badge" id="resModelBadge">Model: OpenCode Go (GPT-6 Luna)</div>
+                <div class="summary-badge bg-style" id="resBgBadge">Background: Gỗ Scandinavian</div>
+                <div class="summary-badge video-count-badge" id="resVideosCountBadge">3 Video Kịch Bản</div>
+              </div>
+              <h2 class="summary-title" id="resProductName">Tên Sản Phẩm Đã Nhận Diện</h2>
+              <p class="summary-vibe" id="resProductVibe">Mô tả đặc tính và vibe định vị thương hiệu</p>
+              
+              <div class="summary-tags" id="resProductTags">
+                <!-- Color chips & category tags injected here -->
+              </div>
+
+              <!-- Quick Export Actions -->
+              <div class="export-actions">
+                <button class="btn-action primary" onclick="copyCurrentVideoPrompts()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy Video Đang Chọn
+                </button>
+                <button class="btn-action" onclick="copyAllVideosPrompts()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy Tất Cả Video
+                </button>
+                <button class="btn-action" onclick="downloadJSON()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Tải File JSON
+                </button>
+                <button class="btn-action" onclick="downloadTXT()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Tải File TXT
+                </button>
+              </div>
+            </div>
+
+            <!-- Video Variations Selector Bar (When multiple videos are generated) -->
+            <div class="video-variations-bar" id="videoVariationsBar">
+              <span class="variations-label">Chọn Kịch Bản:</span>
+              <div class="video-tabs-track" id="videoTabsTrack">
+                <!-- Injected via JS: [Video 1: ASMR], [Video 2: Trendy], ... -->
+              </div>
+            </div>
+
+            <!-- Video Concept Highlight Box -->
+            <div class="video-concept-box" id="currentVideoConceptBox">
+              <div class="concept-title" id="currentVideoTitle">Kịch Bản 1</div>
+              <div class="concept-vibe" id="currentVideoVibe">Phong cách kịch bản</div>
+            </div>
+
+            <!-- Results View Switcher (Scenes vs Video Script) -->
+            <div class="results-tabs">
+              <button class="res-tab active" id="tabResScenes" onclick="switchResultSubTab('scenes')">
+                📦 Prompts Từng Cảnh Riêng Biệt (<span id="sceneCountLabel">5</span>)
+              </button>
+              <button class="res-tab" id="tabResVideo" onclick="switchResultSubTab('video')">
+                🎬 Kịch Bản Video 15s (Master Prompt Video & GPT)
+              </button>
+            </div>
+
+            <!-- SUB-TAB 1: SCENES LIST -->
+            <div class="scenes-container" id="subtabScenes">
+              <div id="scenesList">
+                <!-- Injected via JavaScript -->
+              </div>
+            </div>
+
+            <!-- SUB-TAB 2: VIDEO SCRIPT & MASTER PROMPTS -->
+            <div class="video-script-container" id="subtabVideo" style="display: none;">
+              
+              <!-- 1. MASTER PROMPT FOR GPT TẠO ẢNH (ANTI-COLLAGE / STANDALONE SHOTS) -->
+              <div class="master-prompt-card gpt-master-card">
+                <div class="master-header">
+                  <div>
+                    <div class="badge-row">
+                      <span class="master-badge gpt-badge">🤖 MASTER PROMPT CHO GPT TẠO ẢNH</span>
+                      <span class="shield-badge">🛡️ Tuyệt đối KHÔNG ghép ảnh • KHÔNG Storyboard • Từng cảnh riêng biệt</span>
+                    </div>
+                    <h3>Prompt Tổng Hợp Đưa Vào ChatGPT / DALL-E 3 (Tạo Từng Ảnh Độc Lập)</h3>
+                    <p class="master-sub-desc">Chỉ thị nghiêm ngặt cho GPT sinh từng ảnh đơn lẻ 100%, không bị vẽ thành tranh truyện (storyboard) hay ghép lưới (photo grid).</p>
+                  </div>
+                  <button class="btn-copy-sm highlight-copy" onclick="copyMasterGptPrompt()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy Master Prompt Cho GPT
+                  </button>
+                </div>
+                <div class="prompt-code-box" id="masterGptPromptText">
+                  <!-- Injected via JS -->
+                </div>
+              </div>
+
+              <!-- 2. MASTER PROMPT TẠO VIDEO THEO MODEL (VEO 3 / GROK / MUSE / SEEDANCE) -->
+              <div class="master-prompt-card video-master-card">
+                <div class="master-header">
+                  <div>
+                    <span class="master-badge video-badge">🎬 PROMPT TẠO VIDEO 15S CHUYÊN DỤNG</span>
+                    <h3>Prompt Cho Model Video (Veo 3, Grok, Muse, Seedance 2.0)</h3>
+                    <p class="master-sub-desc">Chọn model video bạn muốn sử dụng để lấy prompt tối ưu chuẩn cú pháp cho model đó:</p>
+                  </div>
+                  <button class="btn-copy-sm" onclick="copyActiveVideoModelPrompt()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy Video Prompt Này
+                  </button>
+                </div>
+
+                <!-- Video Model Selector Tabs -->
+                <div class="video-model-nav-tabs" id="videoModelNavTabs">
+                  <button type="button" class="btn-vmodel-tab active" data-vmodel="veo3" onclick="switchVideoModelPromptTab('veo3')">
+                    <span class="vmodel-icon">✨</span>
+                    <span class="vmodel-name">Google Veo 3</span>
+                    <span class="vmodel-pill">Cinematic 4K</span>
+                  </button>
+                  <button type="button" class="btn-vmodel-tab" data-vmodel="grok" onclick="switchVideoModelPromptTab('grok')">
+                    <span class="vmodel-icon">⚡</span>
+                    <span class="vmodel-name">Grok Video</span>
+                    <span class="vmodel-pill">xAI Fast Action</span>
+                  </button>
+                  <button type="button" class="btn-vmodel-tab" data-vmodel="muse" onclick="switchVideoModelPromptTab('muse')">
+                    <span class="vmodel-icon">🎨</span>
+                    <span class="vmodel-name">Muse AI Video</span>
+                    <span class="vmodel-pill">Văn xuôi dễ hiểu</span>
+                  </button>
+                  <button type="button" class="btn-vmodel-tab" data-vmodel="seedance" onclick="switchVideoModelPromptTab('seedance')">
+                    <span class="vmodel-icon">🎥</span>
+                    <span class="vmodel-name">Seedance 2.0</span>
+                    <span class="vmodel-pill">Multi-shot</span>
+                  </button>
+                </div>
+
+                <div class="prompt-code-box" id="masterVideoPromptText">
+                  <!-- Injected via JS -->
+                </div>
+              </div>
+
+              <!-- 3. TIMELINE & CAMERA BREAKDOWN -->
+              <div class="timeline-card">
+                <div class="timeline-header">
+                  <span class="master-badge alt">TIMELINE & CAMERA BREAKDOWN</span>
+                  <h3>Phân Rã Kịch Bản Từng Giây & Hiệu Ứng Âm Thanh ASMR</h3>
+                </div>
+                <div class="timeline-list" id="videoTimelineList">
+                  <!-- Injected via JS -->
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- TAB 2: REFERENCE VIDEO ANALYSIS (IMG_8804.MP4) -->
+    <section class="analysis-view" id="tabAnalysis" style="display: none;">
+      <div class="analysis-container">
+        
+        <!-- Video Header Info -->
+        <div class="glass-card hero-analysis">
+          <div class="analysis-header-flex">
+            <div>
+              <div class="pill-tag">BÁO CÁO PHÂN TÍCH VIDEO NGUYÊN BẢN</div>
+              <h1 class="analysis-main-title">Phân Tích Cấu Trúc Video "IMG_8804.MP4"</h1>
+              <p class="analysis-desc">Bóc tách toàn diện video unboxing chuẩn viral: Bắt đầu từ hộp carton niêm phong, hé lộ số lượng sản phẩm lớn, trải nghiệm bóc - chế biến ASMR, và kết thúc bằng Hero Shot món ăn hoàn hảo.</p>
+            </div>
+            <div class="meta-stats-grid">
+              <div class="stat-box">
+                <span class="stat-label">Thời lượng</span>
+                <span class="stat-value">14.93s</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Độ phân giải</span>
+                <span class="stat-value">720 x 1280 (9:16)</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Tốc độ khung hình</span>
+                <span class="stat-value">24.04 fps</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Sản phẩm</span>
+                <span class="stat-value">Mì Indomie</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formula Pillars -->
+        <div class="formula-pillars-grid">
+          <div class="pillar-card">
+            <div class="pillar-icon">📦</div>
+            <h4>1. The Abundance Hook (0-4s)</h4>
+            <p>Mở đầu bằng chiếc thùng carton dán kín kích thích tò mò, đôi tay mở bung nắp thùng hé lộ hàng chục gói sản phẩm xếp khít khao tạo cảm giác dư dả thỏa mãn thị giác.</p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🍜</div>
+            <h4>2. Product Reveal & Prep (4-7s)</h4>
+            <p>Nhấc một gói sản phẩm ra ngoài, bóc vắt mì vàng giòn thả vào chiếc tô sứ viền sò xinh xắn, chuẩn bị cho quá trình biến đổi.</p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🔥</div>
+            <h4>3. Sensory Action & ASMR (7-14s)</h4>
+            <p>Rót nước sôi sùng sục, rắc gia vị vàng óng, rưới tương đen và dầu ớt lấp lánh, đũa trộn đảo đều tạo âm thanh kích thích thính giác cực mạnh.</p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🍳</div>
+            <h4>4. The Grand Hero Shot (14-15s)</h4>
+            <p>Khung hình đỉnh cao cuối cùng: Tô mì hoàn chỉnh với trứng ốp la lòng đào tan chảy, thịt viên rim óng ánh trên bàn gỗ ngập tràn nắng ấm.</p>
+          </div>
+        </div>
+
+        <!-- Shot-by-shot frame gallery -->
+        <div class="glass-card frame-gallery-card">
+          <div class="card-header">
+            <h3>Phân Rã Chi Tiết Từng Cảnh Của Video Gốc</h3>
+            <span class="card-tag">Trích xuất từ IMG_8804.MP4</span>
+          </div>
+
+          <div class="frames-breakdown-list" id="framesBreakdownContainer">
+            <!-- Injected via JavaScript from /api/sample-video-analysis -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- API KEY CONFIGURATION MODAL -->
+  <div class="modal-backdrop" id="apiModal" style="display: none;" onclick="closeApiModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+          </svg>
+          <h3>Cấu Hình OpenCode Go API</h3>
+        </div>
+        <button class="btn-modal-close" onclick="closeApiModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-intro">Hệ thống kết nối trực tiếp cổng <b>OpenCode Go</b> (<code>https://opencode.ai/zen/go/v1</code>). Theo quy chuẩn OpenCode Go: <b>GPT</b> dùng giao thức <code>/responses</code> và <b>Claude</b> dùng giao thức <code>/messages</code>.</p>
+
+        <!-- API Key Input -->
+        <div class="form-group">
+          <label for="apiKeyInput">OpenCode Go API Key (bắt đầu bằng <code>oc_sk_...</code>):</label>
+          <div class="input-password-wrap">
+            <input type="password" id="apiKeyInput" placeholder="oc_sk_your_opencode_api_key_here">
+            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('apiKeyInput')">👁️</button>
+          </div>
+          <span class="input-tip">Key được lưu an toàn cục bộ trong trình duyệt của bạn (localStorage).</span>
+        </div>
+
+        <!-- Model Selection -->
+        <div class="form-group">
+          <label for="modelSelect">Mô hình AI xử lý (Model Selection):</label>
+          <select id="modelSelect" onchange="handleModelChange(this.value)">
+            <option value="gpt-6-luna" selected>GPT-6 Luna (OpenCode Go - Khuyên dùng, Vision cực mạnh)</option>
+            <option value="claude-haiku-5-5">Claude Haiku 5.5 (OpenCode Go - Siêu tốc độ, chi tiết)</option>
+            <option value="custom">Tuỳ chỉnh tên model khác...</option>
+          </select>
+        </div>
+
+        <!-- Custom Model Input (if selected) -->
+        <div class="form-group" id="customModelWrap" style="display: none;">
+          <label for="customModelInput">Nhập mã định danh model:</label>
+          <input type="text" id="customModelInput" placeholder="Ví dụ: deepseek-v4-pro, qwen-3-8-max...">
+        </div>
+
+        <!-- Protocol Selection (User Request) -->
+        <div class="form-group">
+          <label for="protocolSelect">Giao thức API Endpoint:</label>
+          <select id="protocolSelect">
+            <option value="auto" selected>Tự động (Khuyên dùng: GPT -> /responses, Claude -> /messages)</option>
+            <option value="responses">OpenAI Responses (/responses) - Cho GPT-6 Luna</option>
+            <option value="messages">Anthropic Messages (/messages) - Cho Claude Haiku 5.5</option>
+          </select>
+          <span class="input-tip">Tự động chuyển hướng chính xác đến <code>/responses</code> hoặc <code>/messages</code> theo tài liệu OpenCode Go.</span>
+        </div>
+
+        <!-- Token Configuration (User Request) -->
+        <div class="form-group highlight-form-group">
+          <div class="token-header-flex">
+            <label for="maxTokensInput">Cấu Hình Giới Hạn Token Xuất Ra (Max Output Tokens):</label>
+            <span class="token-val-badge" id="tokenValBadge">16,000 Tokens</span>
+          </div>
+          <div class="token-input-row">
+            <input type="number" id="maxTokensInput" min="2000" max="64000" step="1000" value="16000" oninput="updateTokenBadge(this.value)">
+            <div class="token-preset-chips">
+              <button type="button" class="btn-token-preset" data-tokens="8000" onclick="setTokenPreset(8000)">8K</button>
+              <button type="button" class="btn-token-preset active" data-tokens="16000" onclick="setTokenPreset(16000)">16K (Chuẩn)</button>
+              <button type="button" class="btn-token-preset" data-tokens="24000" onclick="setTokenPreset(24000)">24K</button>
+              <button type="button" class="btn-token-preset" data-tokens="32000" onclick="setTokenPreset(32000)">32K (Tối Đa)</button>
+            </div>
+          </div>
+          <span class="input-tip">Cho phép tự động điều chỉnh token theo nhu cầu để tránh bị cắt cụt JSON khi tạo nhiều video.</span>
+        </div>
+
+        <!-- API Base URL -->
+        <div class="form-group">
+          <label for="apiUrlInput">API Base URL:</label>
+          <input type="text" id="apiUrlInput" value="https://opencode.ai/zen/go/v1">
+          <span class="input-tip">Mặc định: <code>https://opencode.ai/zen/go/v1</code></span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="clearApiKey()">Xóa Cấu Hình</button>
+        <button class="btn-primary" onclick="saveApiConfig()">Lưu Cấu Hình</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

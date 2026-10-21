@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Secrets (APP_PASSWORD, OPENCODE_API_KEY)
+.env
+
+# Runtime state: hook/background rotation history and product profiles
+.creative_history.json
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db
